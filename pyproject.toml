@@ -8,4 +8,5 @@ dependencies = [
     "openai",
     "lancedb",
     "pydantic",
+    "dotenv>=0.9.9",
 ]
