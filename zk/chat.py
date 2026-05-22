@@ -5,11 +5,7 @@ Orchestration layer between ZK and other data sources.
 from config import Configuration
 from zk.model import ZK
 from zk.store import Store
-from zk.retrieval import retrieve
 from connectors import conversation
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def run(config: Configuration):
@@ -17,14 +13,12 @@ def run(config: Configuration):
     store = Store(config=config)
     while True:
         try:
-            prompt = input(config.PROMPT_CHARACTER + " ")
+            prompt = input(f"{config.username}: ")
             if prompt.strip() in config.EXIT_CHARACTERS:
                 break
             if not prompt.strip():
                 continue
-            context = retrieve(prompt, store, zk, config)
-            logger.debug("Context: ", context)
-            user_prompt, agent_output, timestamp = zk.chat(prompt, context)
+            user_prompt, agent_output, timestamp = zk.chat(prompt, store)
             conversation.ingest(
                 user_prompt,
                 agent_output,
