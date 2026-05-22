@@ -1,10 +1,16 @@
 from config import Configuration
 from zk.chat import run
 from zk.log import setup
-import tools.search_memory
+import pkgutil, importlib, tools
+
+
+def _boot_strap():
+    for m in pkgutil.iter_modules(tools.__path__):
+        importlib.import_module(f"tools.{m.name}")
 
 
 def main():
+    _boot_strap()
     config = Configuration()
     if config.debug:
         setup()

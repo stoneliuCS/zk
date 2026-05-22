@@ -18,7 +18,6 @@ class SearchMemoryArgs(BaseModel):
         "Search Past conversations and notes for content relevant to a query. "
         "Use this whenever the user asks about something they've discussed before, or "
         "when the current question needs context from past interactions. "
-        "Returns up to k matching chunks with their text, source, and timestamp."
     ),
 )
 def search_memory(args: SearchMemoryArgs, store: Store, model: ZK, **_) -> str:
