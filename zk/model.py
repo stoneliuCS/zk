@@ -25,26 +25,34 @@ class ZK:
         ]
         self._session = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
-    def _log_chat(self, role: Literal["user", "assistant"], response: str):
+    def _log_chat(
+        self, role: Literal["user", "assistant"], response: str, timestamp: str
+    ):
         append(
             self._session,
-            datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"),
+            timestamp,
             role,
             response,
             self._config,
         )
 
-    def chat(self, prompt: str):
+    def chat(self, prompt: str, context: str | None) -> tuple[str, str, str]:
         """
-        Chats with the ZK Model
+        Chats with the ZK Model. Returns the prompt of the user, the response by ZK, and the timestamp.
         """
         self._messages.append({"role": "user", "content": prompt})
-        self._log_chat("user", prompt)
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        self._log_chat("user", prompt, timestamp)
         reply = ""
+
+        to_send = list(self._messages)
+
+        if context:
+            to_send.insert(1, {"role": "system", "content": context})
 
         stream = self._client.chat.completions.create(
             model=self._config.llm_primary_model,
-            messages=self._messages,
+            messages=to_send,
             stream=True,
         )
         for chunk in stream:
@@ -55,4 +63,12 @@ class ZK:
             reply += delta
         print()
         self._messages.append({"role": "assistant", "content": reply})
-        self._log_chat("assistant", reply)
+        self._log_chat("assistant", reply, timestamp)
+        return (prompt, reply, timestamp)
+
+    def embed(self, text: str):
+        res = self._client.embeddings.create(input=text, model=self._config.embed_model)
+        return res.data[0].embedding
+
+    def get_current_session(self) -> str:
+        return self._session
