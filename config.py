@@ -4,12 +4,7 @@ from dotenv import load_dotenv
 
 
 class Configuration:
-    # Configurations for the Chat
-    PROMPT_CHARACTER = ">"
-    EXIT_CHARACTERS = {"/quit", "/exit"}
     ROOT_PATH = Path(__file__).parent
-
-    # Relevant Paths
     PATH_TO_DATA_TRANSCRIPTS = ROOT_PATH / "data" / "transcripts"
     PATH_TO_ENV_FILE = ROOT_PATH / ".env"
     PATH_TO_SYSTEM_PROMPT = ROOT_PATH / "prompts" / "system_prompt.md"

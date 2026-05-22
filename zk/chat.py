@@ -6,6 +6,7 @@ from config import Configuration
 from zk.model import ZK
 from zk.store import Store
 from connectors import conversation
+import commands
 
 
 def run(config: Configuration):
@@ -14,10 +15,14 @@ def run(config: Configuration):
     while True:
         try:
             prompt = input(f"{config.username}: ")
-            if prompt.strip() in config.EXIT_CHARACTERS:
-                break
             if not prompt.strip():
                 continue
+            if prompt.strip().startswith("/"):
+                name, _, rest = prompt[1:].partition(" ")
+                commands.dispatch(name, rest)
+                print("HITT")
+                continue
+
             user_prompt, agent_output, timestamp = zk.chat(prompt, store)
             conversation.ingest(
                 user_prompt,
@@ -28,6 +33,5 @@ def run(config: Configuration):
                 zk,
                 config,
             )
-        except (EOFError, KeyboardInterrupt):
-            print()
+        except (EOFError, KeyboardInterrupt, commands.ExitRepl):
             break
