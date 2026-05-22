@@ -7,11 +7,11 @@ from datetime import datetime, UTC
 
 def main():
     config = Configuration()
-    client = OpenAI(base_url=config.LLM_BASE_URL, api_key="ollama")
+    client = OpenAI(base_url=config.llm_base_url, api_key="ollama")
     messages: list[ChatCompletionMessageParam] = [
         {
             "role": "system",
-            "content": config.SYSTEM_PROMPT,
+            "content": config.system_prompt,
         },
     ]
     session_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
@@ -31,7 +31,7 @@ def agent(
     )
     reply = ""
     stream = client.chat.completions.create(
-        model=config.LLM_MODEL,
+        model=config.llm_primary_model,
         messages=messages,
         stream=True,
     )
