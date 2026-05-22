@@ -36,3 +36,4 @@ class Configuration:
             if self.PATH_TO_SYSTEM_PROMPT.exists()
             else ""
         )
+        self.api_key = "ollama"

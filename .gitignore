@@ -13,7 +13,7 @@ wheels/
 .env
 
 # Data
-data/transcripts
+data
 
 # Scratch Scripts
 scripts/scratch
