@@ -5,6 +5,9 @@ import pkgutil, importlib, tools, commands
 
 
 def _boot_strap():
+    """
+    Loads all tools and command modules to be executed.
+    """
     for m in pkgutil.iter_modules(tools.__path__):
         importlib.import_module(f"tools.{m.name}")
     for m in pkgutil.iter_modules(commands.__path__):

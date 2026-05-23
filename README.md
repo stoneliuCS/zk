@@ -3,7 +3,9 @@ A Second Brain For Yourself.
 
 ## Dependencies
 ```bash
-ollama # For running local llms
+ollama # For running local llms.
+ollama run qwen2.5:7b # Example for running a local llm via ollama.
+ollama pull nomic-embed-text # Embedding model for RAG vector searching.
 ```
 
 ## Project Goals

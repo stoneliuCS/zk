@@ -2,7 +2,7 @@
 Responsible for interfacing with the actual module client.
 """
 
-from typing import Literal
+from typing import Callable, Literal
 from openai import OpenAI
 from openai.types.chat import ChatCompletionChunk, ChatCompletionMessageParam
 
@@ -40,14 +40,21 @@ class ZK:
             self._config,
         )
 
-    def _output_chunk(self, chunk: ChatCompletionChunk, replies) -> None:
+    def _output_chunk(
+        self,
+        chunk: ChatCompletionChunk,
+        replies: list[str],
+        on_delta: Callable[[str], None],
+    ) -> None:
         delta = chunk.choices[0].delta.content
         if not delta:
             return
-        print(delta, end="", flush=True)
+        on_delta(delta)
         replies.append(delta)
 
-    def _stream_and_collect(self, to_send: list[ChatCompletionMessageParam]):
+    def _stream_and_collect(
+        self, to_send: list[ChatCompletionMessageParam], on_delta: Callable[[str], None]
+    ):
         tool_buffer: dict[int, dict] = {}
         finish_reason = None
         replies = []
@@ -60,11 +67,10 @@ class ZK:
             stream=True,
         )
 
-        print(f"{self._name}: ", end="", flush=True)
         for chunk in stream:
             choice = chunk.choices[0]
             delta = choice.delta
-            self._output_chunk(chunk, replies)
+            self._output_chunk(chunk, replies, on_delta)
 
             if delta.tool_calls:
                 for tc in delta.tool_calls:
@@ -94,8 +100,6 @@ class ZK:
         ]
 
         content = "".join(replies)
-        if content:
-            print()
 
         return {
             "content": content,
@@ -109,9 +113,10 @@ class ZK:
         prompt: str,
         store: Store,
         timestamp: str,
+        on_delta: Callable[[str], None],
     ) -> tuple[str, str, str]:
         for _ in range(self._max_iterations):
-            result = self._stream_and_collect(to_send)
+            result = self._stream_and_collect(to_send, on_delta)
 
             if not result["tool_calls"]:
                 reply = result["content"]
@@ -129,7 +134,7 @@ class ZK:
             self._messages.append(assistant_msg)
 
             for call in result["tool_calls"]:
-                print(f"\n[calling {call['function']['name']}...]")
+                on_delta(f"\n[calling {call['function']['name']}...]")
                 tool_result = tools.dispatch(
                     call["function"]["name"],
                     call["function"]["arguments"],
@@ -149,7 +154,9 @@ class ZK:
         self._log_chat("assistant", fallback, timestamp)
         return (prompt, fallback, timestamp)
 
-    def chat(self, prompt: str, store: Store) -> tuple[str, str, str]:
+    def chat(
+        self, prompt: str, store: Store, on_delta: Callable[[str], None]
+    ) -> tuple[str, str, str]:
         """
         Chats with the ZK Model. Returns the prompt of the user, the response by ZK, and the timestamp.
         """
@@ -159,7 +166,7 @@ class ZK:
 
         to_send = list(self._messages)
 
-        return self._execute_chat(to_send, prompt, store, timestamp)
+        return self._execute_chat(to_send, prompt, store, timestamp, on_delta)
 
     def embed(self, text: str):
         res = self._client.embeddings.create(input=text, model=self._config.embed_model)

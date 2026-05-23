@@ -2,28 +2,28 @@
 Orchestration layer between ZK and other data sources.
 """
 
+from typing import Callable
 from config import Configuration
 from zk.model import ZK
 from zk.store import Store
 from connectors import conversation
-import commands
+from commands import dispatch
+from zk.tui.app import ZKApp
 
 
 def run(config: Configuration):
     zk = ZK(config=config)
     store = Store(config=config)
-    while True:
+
+    def execute(prompt: str, on_delta: Callable[[str], None]) -> None:
         try:
-            prompt = input(f"{config.username}: ")
             if not prompt.strip():
-                continue
+                return
             if prompt.strip().startswith("/"):
                 name, _, rest = prompt[1:].partition(" ")
-                commands.dispatch(name, rest)
-                print("HITT")
-                continue
-
-            user_prompt, agent_output, timestamp = zk.chat(prompt, store)
+                dispatch(name, rest)
+                return
+            user_prompt, agent_output, timestamp = zk.chat(prompt, store, on_delta)
             conversation.ingest(
                 user_prompt,
                 agent_output,
@@ -33,5 +33,8 @@ def run(config: Configuration):
                 zk,
                 config,
             )
-        except (EOFError, KeyboardInterrupt, commands.ExitRepl):
-            break
+        except (EOFError, KeyboardInterrupt):
+            return
+
+    app = ZKApp(config, on_submit=execute)
+    app.run()

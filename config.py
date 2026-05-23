@@ -50,4 +50,5 @@ class Configuration:
         self.api_key = os.getenv("API_KEY") if os.getenv("API_KEY") else "ollama"
         self.debug = os.getenv("DEBUG") == "true" if os.getenv("DEBUG") else False
         self.location = os.getenv("LOCATION")
-        self.username = os.getenv("USERNAME") if os.getenv("USERNAME") else "Anonymous"
+        username = os.getenv("USERNAME")
+        self.username = username if username else "Anonymous"
